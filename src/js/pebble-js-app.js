@@ -71,11 +71,13 @@ var imageId = {
 
 var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
-if (options === null) options = { "language" : "E",
-								  "use_gps" : "true",
-                                  "location" : "",
-								  "units" : "celsius",
-								  "invert_color" : "false"};
+if (options === null) options = { 
+                        "language" : "E",
+                         "use_gps" : "true",
+                         "location" : "",
+                         "units" : "celsius",
+                         "invert_color" : "false"
+                      };
 
 function getWeatherFromLatLong(latitude, longitude) {
   var response;
@@ -92,7 +94,7 @@ function getWeatherFromLatLong(latitude, longitude) {
         if (response) {
           woeid = response.places.place[0].woeid;
 			//Try this for catch the location name
-			city = response.places.place[0].woe_name;
+			var city = response.places.place[0].woe_name;
 			
 			getWeatherFromWoeid(woeid, city);
         }
@@ -100,7 +102,7 @@ function getWeatherFromLatLong(latitude, longitude) {
         console.log("Error WFLL");
       }
     }
-  }
+  };
   req.send(null);
 }
 
@@ -121,14 +123,14 @@ function getWeatherFromLocation(location_name) {
         if (response) {
           woeid = response.query.results.place.woeid;
 			//Try to get city
-			city = response.query.results.place.name;
+			var city = response.query.results.place.name;
           getWeatherFromWoeid(woeid, city);
         }
       } else {
         console.log("Error WFL");
       }
     }
-  }
+  };
   req.send(null);
 }
 
@@ -136,8 +138,8 @@ function getWeatherFromLocation(location_name) {
 function getWeatherFromWoeid(woeid, city) {
 	
 	/*if Hong Kong then override the woeid with a valid one*/
-	if (woeid ==24865698){woeid=12467924};
-  var celsius = options['units'] == 'celsius';
+	if (woeid ==24865698){woeid=12467924;}
+  var celsius = options.units == 'celsius';
 	/*Works fine
   var query = encodeURI("select item.condition from weather.forecast where woeid = " + woeid +
                         " and u = " + (celsius ? "\"c\"" : "\"f\""));
@@ -159,39 +161,39 @@ function getWeatherFromWoeid(woeid, city) {
         if (response) {
           var condition = response.query.results.channel.item.condition;
           //temperature = condition.temp + (celsius ? "\u00B0C" : "\u00B0F"); //Use this format if you want to display the unit
-			temperature = condition.temp + "\u00B0";
-          icon = imageId[condition.code];
+			var temperature = condition.temp + "\u00B0";
+      var icon = imageId[condition.code];
 			//var inverted == 'B';
 			//if (options['color_inverted']=true) {inverted == 'W';}
 			console.log("icon: " + icon + " temp: " + temperature + " city: " + city);
           Pebble.sendAppMessage({
             "icon":icon,
             "temperature":temperature,
-			  //Put here the output parameters to "Main.C"
-			 "city":city,
-			 "invert_color" : (options["invert_color"] == "true" ? 1 : 0),
-			 "language" : options['language'],
+            //Put here the output parameters to "Main.C"
+            "city":city,
+            "invert_color" : (options.invert_color == "true" ? 1 : 0),
+            "language" : options.language,
           });
         }
       } else {
         console.log("Error WFW");
       }
     }
-  }
+  };
   req.send(null);
 }
 
+var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
+
 function updateWeather() {
-  if (options['use_gps'] == "true") {
+  if (options.use_gps == "true") {
     window.navigator.geolocation.getCurrentPosition(locationSuccess,
                                                     locationError,
                                                     locationOptions);
   } else {
-    getWeatherFromLocation(options["location"]);
+    getWeatherFromLocation(options.location);
   }
 }
-
-var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
 
 function locationSuccess(pos) {
   var coordinates = pos.coords;
@@ -203,17 +205,17 @@ function locationError(err) {
   Pebble.sendAppMessage({
     "icon":16,
     "temperature":""
-	    //Put here the output parameters to "Main.C"
+    //Put here the output parameters to "Main.C"
   });
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'http://dabdemon.github.io/Yahoo--Weather/YWsettings.html?' + //Here you need to enter your configuration webservice
-    'language=' + encodeURIComponent(options['language']) +
-	'&use_gps=' + encodeURIComponent(options['use_gps']) +
-    '&location=' + encodeURIComponent(options['location']) +
-    '&units=' + encodeURIComponent(options['units']) +
-    '&invert_color=' + encodeURIComponent(options['invert_color']);
+  var uri = 'http://anjinkristou.github.io/Yahoo--Weather/YWsettings.html?' + //Here you need to enter your configuration webservice
+    'language=' + encodeURIComponent(options.language) +
+	'&use_gps=' + encodeURIComponent(options.use_gps) +
+    '&location=' + encodeURIComponent(options.location) +
+    '&units=' + encodeURIComponent(options.units) +
+    '&invert_color=' + encodeURIComponent(options.invert_color);
 
 	//console.log('showing configuration at uri: ' + uri);
 
