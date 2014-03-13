@@ -81,7 +81,7 @@ enum WeatherKey {
   WEATHER_TEMPERATURE_KEY = 0x1, // TUPLE_CSTRING
   WEATHER_CITY_KEY = 0x2,        //	TUPLE_CSTRING
   INVERT_COLOR_KEY = 0x3,  		 // TUPLE_CSTRING
-  language_key = 0x4, 			// TUPLE_CSTRING
+  LANGUAGE_KEY = 0x4, 			// TUPLE_CSTRING
 };
 
 //Declare initial window        
@@ -1662,9 +1662,9 @@ void getDate()
 	  	  InvertColors(color_inverted);
 		  break;
 	  
-	  case language_key:
+	  case LANGUAGE_KEY:
 	  	  memcpy(&language, new_tuple->value->cstring, strlen(new_tuple->value->cstring));
-		  persist_write_bool(language_key, new_tuple->value->cstring);
+		  persist_write_bool(LANGUAGE_KEY, new_tuple->value->cstring);
 	  		//Init the date
 			getDate();
 		  break;
@@ -1779,7 +1779,7 @@ void handle_init(void)
                 TupletCString(WEATHER_TEMPERATURE_KEY, ""),
                 TupletCString(WEATHER_CITY_KEY, ""),
 				TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
-				TupletCString(language_key, "0"),
+				TupletCString(LANGUAGE_KEY, "0"),
                 }; //TUPLET INITIAL VALUES
         
                  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,
@@ -1788,7 +1788,7 @@ void handle_init(void)
   
 		//load persistent storage options
 		color_inverted = persist_read_bool(INVERT_COLOR_KEY);
-		persist_read_string(language_key, language, sizeof(language));
+		persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 	
 		//Init the date
 		//getDate();
