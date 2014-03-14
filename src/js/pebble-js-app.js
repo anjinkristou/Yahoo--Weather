@@ -69,6 +69,45 @@ var imageId = {
   3200 : NA, //not available
 };
 
+function windDirectionFromdegrees(degrees) {
+    if (348.75 <= degrees && degrees <= 360) {
+        return "N";
+    } else if (0 <= degrees && degrees <= 11.25) {
+        return "N";
+    } else if (11.25 < degrees && degrees <= 33.75) {
+        return "NNE";
+    } else if (33.75 < degrees && degrees <= 56.25) {
+        return "NE";
+    } else if (56.25 < degrees && degrees <= 78.75) {
+        return "ENE";
+    } else if (78.75 < degrees && degrees <= 101.25) {
+        return "E";
+    } else if (101.25 < degrees && degrees <= 123.75) {
+        return "ESE";
+    } else if (123.75 < degrees && degrees <= 146.25) {
+        return "SE";
+    } else if (146.25 < degrees && degrees <= 168.75) {
+        return "SSE";
+    } else if (168.75 < degrees && degrees <= 191.25) {
+        return "S";
+    } else if (191.25 < degrees && degrees <= 213.75) {
+        return "SSW";
+    } else if (213.75 < degrees && degrees <= 236.25) {
+        return "SW";
+    } else if (236.25 < degrees && degrees <= 258.75) {
+        return "WSW";
+    } else if (258.75 < degrees && degrees <= 281.25) {
+        return "W";
+    } else if (281.25 < degrees && degrees <= 303.75) {
+        return "WNW";
+    } else if (303.75 < degrees && degrees <= 326.25) {
+        return "NW";
+    } else if (326.25 < degrees && degrees < 348.75) {
+        return "NNW";
+    }
+    return "NA";
+}
+
 var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
 if (options === null) options = { 
@@ -145,7 +184,7 @@ function getWeatherFromWoeid(woeid, city) {
                         " and u = " + (celsius ? "\"c\"" : "\"f\""));
 						*/
 	
-	var query = encodeURI("select item.condition, item.forecast from weather.forecast where woeid = " + woeid +
+	var query = encodeURI("select item.condition, item.forecast, wind from weather.forecast where woeid = " + woeid +
                         " and u = " + (celsius ? "\"c\"" : "\"f\"")+" | truncate(count=1)");
 	
   var url = "http://query.yahooapis.com/v1/public/yql?q=" + query + "&format=json";
@@ -160,15 +199,20 @@ function getWeatherFromWoeid(woeid, city) {
         response = JSON.parse(req.responseText);
         if (response) {
           var condition = response.query.results.channel.item.condition;
+          var wind_record = response.query.results.channel.wind;
           //temperature = condition.temp + (celsius ? "\u00B0C" : "\u00B0F"); //Use this format if you want to display the unit
 			var temperature = condition.temp + "\u00B0";
       var icon = imageId[condition.code];
+      var wind_speed = Math.round(wind_record.speed);
+      var wind_direction = windDirectionFromdegrees(wind_record.direction);
+      var wind = wind_speed + " " + wind_direction;
 			//var inverted == 'B';
 			//if (options['color_inverted']=true) {inverted == 'W';}
-			console.log("icon: " + icon + " temp: " + temperature + " city: " + city);
+          console.log("icon: " + icon + " temp: " + temperature + " city: " + city + " wind: " + wind);
           Pebble.sendAppMessage({
             "icon":icon,
             "temperature":temperature,
+             "wind": wind,
             //Put here the output parameters to "Main.C"
             "city":city,
             "invert_color" : (options.invert_color == "true" ? 1 : 0),
@@ -204,7 +248,8 @@ function locationError(err) {
   console.warn('location error (' + err.code + '): ' + err.message);
   Pebble.sendAppMessage({
     "icon":16,
-    "temperature":""
+    "temperature":"",
+    "wind":""
     //Put here the output parameters to "Main.C"
   });
 }

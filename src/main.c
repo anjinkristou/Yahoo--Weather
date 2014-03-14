@@ -7,21 +7,24 @@
 	//English: 35a28a4d-0c9f-408f-9c6d-551e65f03186
 	//Spanish: 3ab59c04-142f-4ff1-b90d-aab93ce54a32
 	//Italian: 6279f406-1114-4b2f-852d-65b0e8ff2a73
+  
+//Screen Resolution: 144 x 168 pixels
 
-#define WEEKDAY_FRAME    (GRect(5, 2, 102, 168-145)) //,,95,
-#define BATT_FRAME       (GRect(103, 4, 40, 168-146)) //98,,
-#define BT_FRAME         (GRect(127, 4, 23, 168-146))
-#define TIME_FRAME       (GRect(0, 15, 144, 168-16))
-#define DATE_FRAME       (GRect(1, 69, 139, 168-62))
+#define WEEKDAY_FRAME    (GRect(5, 2, 102, 23)) //,,95,
+#define BATT_FRAME       (GRect(103, 4, 40, 22)) //98,,
+#define BT_FRAME         (GRect(127, 4, 23, 22))
+#define TIME_FRAME       (GRect(0, 15, 144, 152))
+#define DATE_FRAME       (GRect(1, 69, 139, 106))
 /*
-#define MAX_FRAME (GRect(65, 90, 40, 168-145))
-#define MIN_FRAME (GRect(105, 90, 40, 168-145))
+#define MAX_FRAME (GRect(65, 90, 40, 23))
+#define MIN_FRAME (GRect(105, 90, 40, 23))
 */
         
-#define LAST_UPDATE_FRAME (GRect(110, 148, 34, 168-145))
-#define LOCATION_FRAME    (GRect(1, 148, 110, 168-145))
-#define WEATHER_FRAME     (GRect(5, 90, 65, 168-108))
-#define TEMPERATURE_FRAME (GRect(65, 95, 82, 168-118))
+#define LAST_UPDATE_FRAME (GRect(110, 148, 34, 23))
+#define LOCATION_FRAME    (GRect(1, 148, 110, 23))
+#define WEATHER_FRAME     (GRect(5, 90, 65, 60))
+#define TEMPERATURE_FRAME (GRect(65, 95, 82, 25))
+#define WIND_FRAME        (GRect(65, 120, 82, 25))
         
 
         
@@ -82,6 +85,7 @@ enum WeatherKey {
   WEATHER_CITY_KEY = 0x2,        //	TUPLE_CSTRING
   INVERT_COLOR_KEY = 0x3,  		 // TUPLE_CSTRING
   LANGUAGE_KEY = 0x4, 			// TUPLE_CSTRING
+  WEATHER_WIND_KEY = 0x5, 			// TUPLE_CSTRING
 };
 
 //Declare initial window        
@@ -96,6 +100,7 @@ enum WeatherKey {
         TextLayer *Batt_Layer;                        //Layer for the BT connection
         TextLayer *BT_Layer;                        //Layer for the BT connection
         TextLayer *Temperature_Layer;        //Layer for the Temperature
+        TextLayer *Wind_Layer;        //Layer for the Temperature
 
         static GBitmap *BT_image;
         static BitmapLayer *BT_icon_layer; //Layer for the BT connection
@@ -113,6 +118,7 @@ enum WeatherKey {
         GFont font_time; // Font for time
         GFont font_update; // Font for last update
         GFont font_temperature;        // Font for the temperature
+        GFont font_wind;        // Font for the wind
 
         //Vibe Control
         bool BTConnected = true;
@@ -131,10 +137,10 @@ enum WeatherKey {
         static char day_text[] = "31";
         static char day_month[]= "31 SEPTEMBER";
         static char time_text[] = "00:00";
-	  	static char inverted[]="B";
+	  	  static char inverted[]="B";
         
         bool translate_sp = true;
-        static char language[] = "R"; 	//"0" = English //"E" = Spanish // "I" = Italian // "G" = German 
+        static char language[] = "0"; 	//"0" = English //"E" = Spanish // "I" = Italian // "G" = German 
 										// "C" = Czech // "F" = French // "P" = Portuguese // "X" = Finnish // "D" = Dutch
 										//"1" = Polish // "S" = Swedish // "2" = Danish //"3" = Catalan
 		bool color_inverted;
@@ -148,7 +154,7 @@ enum WeatherKey {
 //**************************//
 
 static void handle_battery(BatteryChargeState charge_state) {
-          static char battery_text[] = "100%";
+  //static char battery_text[] = "100%";
 	
 	//kill previous batt_image to avoid invalid ones.
 	if (Batt_image) {gbitmap_destroy(Batt_image);}
@@ -291,6 +297,7 @@ void InvertColors(bool inverted)
 		text_layer_set_text_color(Time_Layer, GColorBlack);
 		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(Temperature_Layer, GColorBlack);
+    text_layer_set_text_color(Wind_Layer, GColorBlack);
 		text_layer_set_text_color(Location_Layer, GColorBlack);
 		text_layer_set_text_color(Last_Update, GColorBlack);
 		
@@ -318,6 +325,7 @@ void InvertColors(bool inverted)
 		text_layer_set_text_color(Time_Layer, GColorWhite);
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(Temperature_Layer, GColorWhite);
+    text_layer_set_text_color(Wind_Layer, GColorWhite);
 		text_layer_set_text_color(Location_Layer, GColorWhite);
 		text_layer_set_text_color(Last_Update, GColorWhite);
 		
@@ -1644,10 +1652,17 @@ void getDate()
 
     case WEATHER_TEMPERATURE_KEY:
          //Update the temperature
-      		text_layer_set_text(Temperature_Layer, new_tuple->value->cstring);
+      		//text_layer_set_text(Temperature_Layer, new_tuple->value->cstring);
+          text_layer_set_text(Temperature_Layer, new_tuple->value->cstring);
          //Set the time on which weather was retrived
          	memcpy(&last_update, time_text, strlen(time_text));
          	text_layer_set_text(Last_Update, last_update);
+      		break;
+    
+    case WEATHER_WIND_KEY:
+         //Update the wind
+      		//text_layer_set_text(Wind_Layer, new_tuple->value->cstring);
+          text_layer_set_text(Wind_Layer, new_tuple->value->cstring);
       		break;
 
      case WEATHER_CITY_KEY:
@@ -1766,6 +1781,7 @@ void handle_init(void)
         ResHandle res_u;
         ResHandle res_t;
         ResHandle res_temp;
+      ResHandle res_wind;
 	
 	
 	         // Setup messaging
@@ -1774,13 +1790,14 @@ void handle_init(void)
 	
                 app_message_open(inbound_size, outbound_size);
         
-                Tuplet initial_values[] = {
+    Tuplet initial_values[] = {
                 TupletInteger(WEATHER_ICON_KEY, (uint8_t) 16), //INITIALIZE TO "N/A"
                 TupletCString(WEATHER_TEMPERATURE_KEY, ""),
                 TupletCString(WEATHER_CITY_KEY, ""),
-				TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
-				TupletCString(LANGUAGE_KEY, "0"),
-                }; //TUPLET INITIAL VALUES
+				        TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
+				        TupletCString(LANGUAGE_KEY, "0"),
+                TupletCString(WEATHER_WIND_KEY, ""),
+    }; //TUPLET INITIAL VALUES
         
                  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,
                 ARRAY_LENGTH(initial_values), sync_tuple_changed_callback,
@@ -1806,13 +1823,15 @@ void handle_init(void)
         res_t = resource_get_handle(RESOURCE_ID_FUTURA_CONDENSED_53); // Time font
         res_d = resource_get_handle(RESOURCE_ID_FUTURA_17); // Date font
         res_u = resource_get_handle(RESOURCE_ID_FUTURA_10); // Last Update font
-        res_temp = resource_get_handle(RESOURCE_ID_FUTURA_43); //Temperature
+        res_temp = resource_get_handle(RESOURCE_ID_FUTURA_24); //Temperature
+        res_wind = resource_get_handle(RESOURCE_ID_FUTURA_20); //Temperature
         
                 
-    	font_date = fonts_load_custom_font(res_d);
+    	  font_date = fonts_load_custom_font(res_d);
         font_update = fonts_load_custom_font(res_u);
         font_time = fonts_load_custom_font(res_t);
         font_temperature = fonts_load_custom_font(res_temp);
+        font_wind = fonts_load_custom_font(res_wind);
         //font_temperature = fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
         
         
@@ -1900,6 +1919,23 @@ void handle_init(void)
                 text_layer_set_font(Temperature_Layer, font_temperature);
                 text_layer_set_text_alignment(Temperature_Layer, GTextAlignmentCenter);
                 layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(Temperature_Layer));
+  
+                  //Display the Wind layer
+                Wind_Layer = text_layer_create(WIND_FRAME);
+	
+				if (color_inverted)
+				{ 
+                	text_layer_set_text_color(Wind_Layer, GColorBlack);
+				}
+				else
+				{
+                	text_layer_set_text_color(Wind_Layer, GColorWhite);		
+				}
+		
+	            text_layer_set_background_color(Wind_Layer, GColorClear);	
+                text_layer_set_font(Wind_Layer, font_wind);
+                text_layer_set_text_alignment(Wind_Layer, GTextAlignmentCenter);
+                layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(Wind_Layer));
         
                 //Display the Location layer
                 Location_Layer = text_layer_create(LOCATION_FRAME);
@@ -1997,6 +2033,7 @@ void handle_deinit(void)
         text_layer_destroy(date_layer);
         text_layer_destroy(Weekday_Layer);
         text_layer_destroy(Temperature_Layer);        
+        text_layer_destroy(Wind_Layer); 
         text_layer_destroy(Location_Layer);        
         text_layer_destroy(Last_Update);        
         
@@ -2005,6 +2042,7 @@ void handle_deinit(void)
         fonts_unload_custom_font(font_update);
         fonts_unload_custom_font(font_time);
         fonts_unload_custom_font(font_temperature);
+        fonts_unload_custom_font(font_wind);
         
         //Deallocate the main window
          window_destroy(my_window);
