@@ -26,7 +26,7 @@
 #define TEMPERATURE_FRAME (GRect(65, 95, 82, 25))
 #define WIND_FRAME        (GRect(65, 120, 82, 25))
         
-
+#define INVERTER_FRAME    (GRect(0,0,144,168))
         
 //******************//
 // DEFINE THE ICONS //
@@ -101,6 +101,8 @@ enum WeatherKey {
         TextLayer *BT_Layer;                        //Layer for the BT connection
         TextLayer *Temperature_Layer;        //Layer for the Temperature
         TextLayer *Wind_Layer;        //Layer for the Temperature
+        
+        InverterLayer *inverter_layer;
 
         static GBitmap *BT_image;
         static BitmapLayer *BT_icon_layer; //Layer for the BT connection
@@ -1672,6 +1674,8 @@ void getDate()
 	 case INVERT_COLOR_KEY:
 		  color_inverted = new_tuple->value->uint8 != 0;
 		  persist_write_bool(INVERT_COLOR_KEY, color_inverted);
+    
+      layer_set_hidden((Layer*)inverter_layer, !color_inverted);
 
 	  	  //refresh the layout
 	  	  InvertColors(color_inverted);
@@ -1824,7 +1828,7 @@ void handle_init(void)
         res_d = resource_get_handle(RESOURCE_ID_FUTURA_17); // Date font
         res_u = resource_get_handle(RESOURCE_ID_FUTURA_10); // Last Update font
         res_temp = resource_get_handle(RESOURCE_ID_FUTURA_24); //Temperature
-        res_wind = resource_get_handle(RESOURCE_ID_FUTURA_20); //Temperature
+        res_wind = resource_get_handle(RESOURCE_ID_FUTURA_18); //Temperature
         
                 
     	  font_date = fonts_load_custom_font(res_d);
@@ -1971,6 +1975,8 @@ void handle_init(void)
                 text_layer_set_text_alignment(Last_Update, GTextAlignmentRight);
                 layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(Last_Update));
         
+          inverter_layer = inverter_layer_create(INVERTER_FRAME);
+          layer_add_child(window_get_root_layer(my_window),(Layer*)inverter_layer);
 /*
         
          // Setup messaging
@@ -2035,7 +2041,9 @@ void handle_deinit(void)
         text_layer_destroy(Temperature_Layer);        
         text_layer_destroy(Wind_Layer); 
         text_layer_destroy(Location_Layer);        
-        text_layer_destroy(Last_Update);        
+        text_layer_destroy(Last_Update);
+  
+        inverter_layer_destroy(inverter_layer);
         
         //Deallocate custom fonts
         fonts_unload_custom_font(font_date);

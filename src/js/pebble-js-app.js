@@ -121,7 +121,7 @@ if (options === null) options = {
 function getWeatherFromLatLong(latitude, longitude) {
   var response;
   var woeid = -1;
-  var key = "b732076fc242bf05e5f0637eaa439d62"; //my Flickr API key. If you want to reuse this code, please use your own key.
+  var key = "67c03fcba28c45e42a816cd7be114d9e"; //my Flickr API key. If you want to reuse this code, please use your own key.
   var req = new XMLHttpRequest();
   var url = "http://api.flickr.com/services/rest/?method=flickr.places.findByLatLon&api_key=" + key + "&lat=" + latitude + "&lon=" + longitude + "&accuracy=16&format=json&nojsoncallback=1";
   req.open('GET', url, true);
@@ -203,7 +203,7 @@ function getWeatherFromWoeid(woeid, city) {
           //temperature = condition.temp + (celsius ? "\u00B0C" : "\u00B0F"); //Use this format if you want to display the unit
 			var temperature = condition.temp + "\u00B0";
       var icon = imageId[condition.code];
-      var wind_speed = Math.round(wind_record.speed);
+          var wind_speed = Math.round(celsius ? wind_record.speed *1000 /60 /60 : wind_record.speed);
       var wind_direction = windDirectionFromdegrees(wind_record.direction);
       var wind = wind_speed + " " + wind_direction;
 			//var inverted == 'B';
