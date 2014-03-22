@@ -66,7 +66,7 @@ enum WeatherKey {
     INVERT_COLOR_KEY = 0x3,  		   // TUPLE_CSTRING
     LANGUAGE_KEY = 0x4, 			     // TUPLE_CSTRING
     WEATHER_WIND_KEY = 0x5, 			 // TUPLE_CSTRING
-    VIBES_KEY = 0x6, 			 // TUPLE_CSTRING
+    VIBES_BLUETOOTH_KEY = 0x6, 			 // TUPLE_CSTRING
 };
 
 //Declare initial window
@@ -357,9 +357,9 @@ static void sync_tuple_changed_callback(const uint32_t key,
         layer_set_hidden((Layer*)inverter_layer, !color_inverted);
 
         break;
-    case VIBES_KEY:
+    case VIBES_BLUETOOTH_KEY:
         vibes = new_tuple->value->uint8 != 0;
-        persist_write_bool(VIBES_KEY, vibes);
+        persist_write_bool(VIBES_BLUETOOTH_KEY, vibes);
         break;
 
     case LANGUAGE_KEY:
@@ -480,7 +480,7 @@ void handle_init(void)
         TupletCString(WEATHER_TEMPERATURE_KEY, ""),
         TupletCString(WEATHER_CITY_KEY, ""),
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
-        TupletInteger(VIBES_KEY, persist_read_bool(VIBES_KEY)),
+        TupletInteger(VIBES_BLUETOOTH_KEY, persist_read_bool(VIBES_BLUETOOTH_KEY)),
         TupletCString(LANGUAGE_KEY, "0"),
         TupletCString(WEATHER_WIND_KEY, ""),
     }; //TUPLET INITIAL VALUES
@@ -491,7 +491,7 @@ void handle_init(void)
 
     //load persistent storage options
     color_inverted = persist_read_bool(INVERT_COLOR_KEY);
-    vibes = persist_read_bool(VIBES_KEY);
+    vibes = persist_read_bool(VIBES_BLUETOOTH_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
     //Init the date

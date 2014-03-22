@@ -5,8 +5,8 @@
         "city": 2,
         "temperature": 1,
         "language": 4,
+        "vibes_bluetooth": 6,
         "invert_color": 3,
-        "vibes": 6,
         "wind": 5,
         "icon": 0
     },
