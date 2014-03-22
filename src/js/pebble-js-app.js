@@ -116,6 +116,7 @@ if (options === null) options = {
                          "location" : "",
                          "units" : "celsius",
                          "invert_color" : "false"
+                         "vibes" : "false"
                       };
 
 function getWeatherFromLatLong(latitude, longitude) {
@@ -217,6 +218,7 @@ function getWeatherFromWoeid(woeid, city) {
             "city":city,
             "invert_color" : (options.invert_color == "true" ? 1 : 0),
             "language" : options.language,
+            "vibes" : (options.vibes == "true" ? 1 : 0),
           });
         }
       } else {
@@ -255,12 +257,13 @@ function locationError(err) {
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'http://anjinkristou.github.io/Yahoo--Weather/YWsettings.html?' + //Here you need to enter your configuration webservice
+  var uri = 'http://anjinkristou.github.io/Yahoo--WeatherV2/YWsettings.html?' + //Here you need to enter your configuration webservice
     'language=' + encodeURIComponent(options.language) +
 	'&use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
     '&units=' + encodeURIComponent(options.units) +
-    '&invert_color=' + encodeURIComponent(options.invert_color);
+    '&invert_color=' + encodeURIComponent(options.invert_color) +
+    '&vibes=' + encodeURIComponent(options.vibes);
 
 	//console.log('showing configuration at uri: ' + uri);
 

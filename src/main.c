@@ -63,9 +63,10 @@ enum WeatherKey {
     WEATHER_ICON_KEY = 0x0,        // TUPLE_INT
     WEATHER_TEMPERATURE_KEY = 0x1, // TUPLE_CSTRING
     WEATHER_CITY_KEY = 0x2,        //	TUPLE_CSTRING
-    INVERT_COLOR_KEY = 0x3,  		 // TUPLE_CSTRING
-    LANGUAGE_KEY = 0x4, 			// TUPLE_CSTRING
-    WEATHER_WIND_KEY = 0x5, 			// TUPLE_CSTRING
+    INVERT_COLOR_KEY = 0x3,  		   // TUPLE_CSTRING
+    LANGUAGE_KEY = 0x4, 			     // TUPLE_CSTRING
+    WEATHER_WIND_KEY = 0x5, 			 // TUPLE_CSTRING
+    VIBES_KEY = 0x6, 			 // TUPLE_CSTRING
 };
 
 //Declare initial window
@@ -111,21 +112,19 @@ const uint32_t timeout_ms = 1800000; //30min (1min = 60000)
 
 //Date & Time
 static char last_update[]="00:00 ";
-static int initial_minute;
 
 static char weekday_text[] = "XXXXXXXXXXXX";
-static char date_text[] = "XXX 00";
 static char month_text[] = "XXXXXXXXXXXXX";
 static char day_text[] = "31";
 static char day_month[]= "31 SEPTEMBER";
 static char time_text[] = "00:00";
-static char inverted[]="B";
 
 bool translate_sp = true;
 static char language[] = "0"; 	//"0" = English //"E" = Spanish // "I" = Italian // "G" = German
 // "C" = Czech // "F" = French // "P" = Portuguese // "X" = Finnish // "D" = Dutch
 //"1" = Polish // "S" = Swedish // "2" = Danish //"3" = Catalan
 bool color_inverted;
+bool vibes;
 int ICON_CODE;
 bool batt_status = true; //If true, display the battery status all the time; if false, just when running low (<10%)
 
@@ -196,7 +195,7 @@ static void handle_battery(BatteryChargeState charge_state) {
     //text_layer_set_text(Batt_Layer, battery_text);
 }
 
-static void vibes()
+static void vibes_bluetooth()
 {
     //************************//
     // Vibes on disconnection //
@@ -228,6 +227,8 @@ static void vibes()
 static void handle_bluetooth(bool connected)
 {
     //text_layer_set_text(BT_Layer, connected ? "C" : "D");
+  
+    if(!vibes) return;
 
     //draw the BT icon if connected
     if(connected ==true)
@@ -237,7 +238,7 @@ static void handle_bluetooth(bool connected)
         bitmap_layer_set_bitmap(BT_icon_layer, BT_image);
         if (BTConnected == false){
             //setup the timer to catch false disconnections (5 secs)
-            timer = app_timer_register(5000, vibes, NULL);
+            timer = app_timer_register(5000, vibes_bluetooth, NULL);
         }
 
     }
@@ -248,7 +249,7 @@ static void handle_bluetooth(bool connected)
         bitmap_layer_set_bitmap(BT_icon_layer, NULL);
         if (BTConnected == true){
             //setup the timer to catch false disconnections (5 secs)
-            timer = app_timer_register(5000, vibes, NULL);
+            timer = app_timer_register(5000, vibes_bluetooth, NULL);
         }
 
     }
@@ -355,6 +356,10 @@ static void sync_tuple_changed_callback(const uint32_t key,
 
         layer_set_hidden((Layer*)inverter_layer, !color_inverted);
 
+        break;
+    case VIBES_KEY:
+        vibes = new_tuple->value->uint8 != 0;
+        persist_write_bool(VIBES_KEY, vibes);
         break;
 
     case LANGUAGE_KEY:
@@ -475,6 +480,7 @@ void handle_init(void)
         TupletCString(WEATHER_TEMPERATURE_KEY, ""),
         TupletCString(WEATHER_CITY_KEY, ""),
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
+        TupletInteger(VIBES_KEY, persist_read_bool(VIBES_KEY)),
         TupletCString(LANGUAGE_KEY, "0"),
         TupletCString(WEATHER_WIND_KEY, ""),
     }; //TUPLET INITIAL VALUES
@@ -485,6 +491,7 @@ void handle_init(void)
 
     //load persistent storage options
     color_inverted = persist_read_bool(INVERT_COLOR_KEY);
+    vibes = persist_read_bool(VIBES_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
     //Init the date
