@@ -69,6 +69,25 @@ enum WeatherKey {
     WEATHER_WIND_KEY = 0x5, 			 // TUPLE_CSTRING
     VIBES_BLUETOOTH_KEY = 0x6, 			 // TUPLE_CSTRING
     USE_ANIMATION_KEY = 0x7, 			 // TUPLE_CSTRING
+    VIBES_HOUR_KEY = 0x8, 			 // TUPLE_CSTRING
+};
+
+typedef struct setting_t {
+    int weather_icon_code;
+    bool color_inverted;
+    bool vibes_bluetooth;
+    bool batt_status; //If true, display the battery status all the time; if false, just when running low (<10%)
+    bool use_animation;
+    bool vibes_hour;
+} settings_t;
+
+settings_t settings = {
+    .weather_icon_code = 0,
+    .color_inverted = false,
+    .vibes_bluetooth = true,
+    .batt_status = true, //If true, display the battery status all the time; if false, just when running low (<10%)
+    .use_animation = true,
+    .vibes_hour = false
 };
 
 //Declare initial window
@@ -131,11 +150,7 @@ bool translate_sp = true;
 static char language[] = "0"; 	//"0" = English //"E" = Spanish // "I" = Italian // "G" = German
 // "C" = Czech // "F" = French // "P" = Portuguese // "X" = Finnish // "D" = Dutch
 //"1" = Polish // "S" = Swedish // "2" = Danish //"3" = Catalan
-bool color_inverted;
-bool vibes;
-int ICON_CODE;
-bool batt_status = true; //If true, display the battery status all the time; if false, just when running low (<10%)
-bool use_animation = true;
+
 
 //**************************************************//
 // Helper function to distroy a property annimation //
@@ -162,7 +177,7 @@ void weather_animation_stopped(Animation *animation, void *data) {
 	(void)data;
 
   if (weather_image) {gbitmap_destroy(weather_image);}
-  weather_image = gbitmap_create_with_resource(WEATHER_ICONS[ICON_CODE]);
+  weather_image = gbitmap_create_with_resource(WEATHER_ICONS[settings.weather_icon_code]);
 	bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
 
 	destroy_property_animation(&weather_animation_in);
@@ -203,7 +218,7 @@ static void handle_battery(BatteryChargeState charge_state) {
             bitmap_layer_set_bitmap(Batt_icon_layer, Batt_image);
         }
         //CHECK IF BATTERY STATUS SHOULD DISPLAY ALL THE TIME OR JUST WHILE RUNNING LOW
-        else if (batt_status){
+        else if (settings.batt_status){
             if (charge_state.charge_percent <=20) //If the charge is between 10% and 20%
             {
                 Batt_image = gbitmap_create_with_resource(RESOURCE_ID_BATT_20);
@@ -246,7 +261,7 @@ static void vibes_bluetooth()
     // Vibes on disconnection //
     //************************//
   
-    if(!vibes) return;
+    if(!settings.vibes_bluetooth) return;
 
     //Vibes on connection
     if (BTConnected == false){
@@ -373,8 +388,8 @@ static void sync_tuple_changed_callback(const uint32_t key,
         //weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
         //bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
         //persist_write_int(WEATHER_ICON_KEY, new_tuple->value->uint8);
-        ICON_CODE = new_tuple->value->uint8;
-      if(use_animation){
+        settings.weather_icon_code = new_tuple->value->uint8;
+      if(settings.use_animation){
         destroy_property_animation(&weather_animation_out);
         weather_animation_out = property_animation_create_layer_frame(bitmap_layer_get_layer(weather_icon_layer), &weather_from_rect, &weather_to_rect);
         animation_set_duration((Animation*)weather_animation_out, 500);  
@@ -412,20 +427,25 @@ static void sync_tuple_changed_callback(const uint32_t key,
         break;
 
     case INVERT_COLOR_KEY:
-        color_inverted = new_tuple->value->uint8 != 0;
-        persist_write_bool(INVERT_COLOR_KEY, color_inverted);
+        settings.color_inverted = new_tuple->value->uint8 != 0;
+        persist_write_bool(INVERT_COLOR_KEY, settings.color_inverted);
 
-        layer_set_hidden((Layer*)inverter_layer, !color_inverted);
+        layer_set_hidden((Layer*)inverter_layer, !settings.color_inverted);
 
         break;
     case VIBES_BLUETOOTH_KEY:
-        vibes = new_tuple->value->uint8 != 0;
-        persist_write_bool(VIBES_BLUETOOTH_KEY, vibes);
+        settings.vibes_bluetooth = new_tuple->value->uint8 != 0;
+        persist_write_bool(VIBES_BLUETOOTH_KEY, settings.vibes_bluetooth);
+        break;
+      
+    case VIBES_HOUR_KEY:
+        settings.vibes_hour = new_tuple->value->uint8 != 0;
+        persist_write_bool(VIBES_HOUR_KEY, settings.vibes_hour);
         break;
       
     case USE_ANIMATION_KEY:
-        use_animation = new_tuple->value->uint8 != 0;
-        persist_write_bool(USE_ANIMATION_KEY, use_animation);
+        settings.use_animation = new_tuple->value->uint8 != 0;
+        persist_write_bool(USE_ANIMATION_KEY, settings.use_animation);
         break;
 
     case LANGUAGE_KEY:
@@ -443,19 +463,8 @@ static void sync_tuple_changed_callback(const uint32_t key,
 //************************//
 void handle_tick(struct tm *tick_time, TimeUnits units_changed)
 {
-
-
-
-
     if (units_changed & MINUTE_UNIT)
     {
-
-        /*
-                        if (units_changed & DAY_UNIT)
-                        {
-                        } // DAY CHANGES
-                        */
-
         //Format the time
         if (clock_is_24h_style())
         {
@@ -474,6 +483,11 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed)
 
         //Check BT Status
         handle_bluetooth(bluetooth_connection_service_peek());
+      
+      if(settings.vibes_hour && tick_time->tm_min == 0){
+          //Vibes to alert hour
+            vibes_short_pulse();
+      }
 
     } //MINUTE CHANGES
     if (units_changed & DAY_UNIT){
@@ -547,6 +561,7 @@ void handle_init(void)
         TupletCString(WEATHER_CITY_KEY, ""),
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
         TupletInteger(VIBES_BLUETOOTH_KEY, persist_read_bool(VIBES_BLUETOOTH_KEY)),
+        TupletInteger(VIBES_HOUR_KEY, persist_read_bool(VIBES_HOUR_KEY)),
         TupletInteger(USE_ANIMATION_KEY, persist_read_bool(USE_ANIMATION_KEY)),
         TupletCString(LANGUAGE_KEY, "0"),
         TupletCString(WEATHER_WIND_KEY, ""),
@@ -557,9 +572,10 @@ void handle_init(void)
                   NULL, NULL);
 
     //load persistent storage options
-    color_inverted = persist_read_bool(INVERT_COLOR_KEY);
-    vibes = persist_read_bool(VIBES_BLUETOOTH_KEY);
-    use_animation = persist_read_bool(USE_ANIMATION_KEY);
+    settings.color_inverted = persist_read_bool(INVERT_COLOR_KEY);
+    settings.vibes_bluetooth = persist_read_bool(VIBES_BLUETOOTH_KEY);
+    settings.vibes_hour = persist_read_bool(VIBES_HOUR_KEY);
+    settings.use_animation = persist_read_bool(USE_ANIMATION_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
     //Init the date
@@ -681,7 +697,7 @@ void handle_init(void)
 
     inverter_layer = inverter_layer_create(INVERTER_FRAME);
     layer_add_child(window_get_root_layer(my_window),(Layer*)inverter_layer);
-    layer_set_hidden((Layer*)inverter_layer, !color_inverted);
+    layer_set_hidden((Layer*)inverter_layer, !settings.color_inverted);
     /*
 
          // Setup messaging
