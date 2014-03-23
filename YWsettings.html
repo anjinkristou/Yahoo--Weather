@@ -81,6 +81,14 @@
             <option value="true">Yes</option>
           </select>
         </div>
+        
+        <div data-role="fieldcontain">
+          <label for="use_animation">Use animation</label>
+          <select name="use_animation" id="use_animation" data-theme="c" data-role="slider" data-track-theme="d">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
 
         <div class='ui-body ui-body-b'>
           <fieldset class='ui-grid-a'>
@@ -110,7 +118,8 @@
           'location': $('#location').val(),
           'units': $('input:radio[name=units]:checked').val(),
           'invert_color': $('#invert_color').val(),
-          'vibes_bluettoth': $('#vibes').val()
+          'vibes_bluetooth': $('#vibes_bluetooth').val(),
+          'use_animation': $('#use_animation').val()
         }
         return options;
       }
@@ -133,6 +142,7 @@
         }
         $('#invert_color').val(getQueryVariable('invert_color')).change();
         $('#vibes_bluetooth').val(getQueryVariable('vibes_bluetooth')).change();
+        $('#use_animation').val(getQueryVariable('use_animation')).change();
 
         // Disable location field based on GPS toggle
         $('#location').prop('disabled', $('#gps_switch').val() == "true");
