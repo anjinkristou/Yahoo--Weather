@@ -68,6 +68,7 @@ enum WeatherKey {
     LANGUAGE_KEY = 0x4, 			     // TUPLE_CSTRING
     WEATHER_WIND_KEY = 0x5, 			 // TUPLE_CSTRING
     VIBES_BLUETOOTH_KEY = 0x6, 			 // TUPLE_CSTRING
+    USE_ANIMATION_KEY = 0x7, 			 // TUPLE_CSTRING
 };
 
 //Declare initial window
@@ -244,6 +245,8 @@ static void vibes_bluetooth()
     //************************//
     // Vibes on disconnection //
     //************************//
+  
+    if(!vibes) return;
 
     //Vibes on connection
     if (BTConnected == false){
@@ -271,8 +274,6 @@ static void vibes_bluetooth()
 static void handle_bluetooth(bool connected)
 {
     //text_layer_set_text(BT_Layer, connected ? "C" : "D");
-  
-    if(!vibes) return;
 
     //draw the BT icon if connected
     if(connected ==true)
@@ -421,6 +422,11 @@ static void sync_tuple_changed_callback(const uint32_t key,
         vibes = new_tuple->value->uint8 != 0;
         persist_write_bool(VIBES_BLUETOOTH_KEY, vibes);
         break;
+      
+    case USE_ANIMATION_KEY:
+        use_animation = new_tuple->value->uint8 != 0;
+        persist_write_bool(USE_ANIMATION_KEY, use_animation);
+        break;
 
     case LANGUAGE_KEY:
         memcpy(&language, new_tuple->value->cstring, strlen(new_tuple->value->cstring));
@@ -541,6 +547,7 @@ void handle_init(void)
         TupletCString(WEATHER_CITY_KEY, ""),
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
         TupletInteger(VIBES_BLUETOOTH_KEY, persist_read_bool(VIBES_BLUETOOTH_KEY)),
+        TupletInteger(USE_ANIMATION_KEY, persist_read_bool(USE_ANIMATION_KEY)),
         TupletCString(LANGUAGE_KEY, "0"),
         TupletCString(WEATHER_WIND_KEY, ""),
     }; //TUPLET INITIAL VALUES
@@ -552,6 +559,7 @@ void handle_init(void)
     //load persistent storage options
     color_inverted = persist_read_bool(INVERT_COLOR_KEY);
     vibes = persist_read_bool(VIBES_BLUETOOTH_KEY);
+    use_animation = persist_read_bool(USE_ANIMATION_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
     //Init the date

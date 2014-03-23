@@ -116,7 +116,8 @@ if (options === null) options = {
                          "location" : "",
                          "units" : "celsius",
                          "invert_color" : "false",
-                         "vibes_bluetooth" : "false"
+                         "vibes_bluetooth" : "false",
+                         "use_animation" : "false"
                       };
 
 function getWeatherFromLatLong(latitude, longitude) {
@@ -219,6 +220,7 @@ function getWeatherFromWoeid(woeid, city) {
             "invert_color" : (options.invert_color == "true" ? 1 : 0),
             "language" : options.language,
             "vibes_bluetooth" : (options.vibes_bluetooth == "true" ? 1 : 0),
+            "use_animation" : (options.use_animation == "true" ? 1 : 0),
           });
         }
       } else {
@@ -263,7 +265,8 @@ Pebble.addEventListener('showConfiguration', function(e) {
     '&location=' + encodeURIComponent(options.location) +
     '&units=' + encodeURIComponent(options.units) +
     '&invert_color=' + encodeURIComponent(options.invert_color) +
-    '&vibes_bluetooth=' + encodeURIComponent(options.vibes_bluetooth);
+    '&vibes_bluetooth=' + encodeURIComponent(options.vibes_bluetooth) +
+    '&use_animation=' + encodeURIComponent(options.use_animation);
 
 	//console.log('showing configuration at uri: ' + uri);
 
