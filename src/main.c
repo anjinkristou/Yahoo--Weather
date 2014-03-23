@@ -24,6 +24,7 @@
 #define LAST_UPDATE_FRAME (GRect(110, 148, 34, 23))
 #define LOCATION_FRAME    (GRect(1, 148, 110, 23))
 #define WEATHER_FRAME     (GRect(5, 90, 65, 60))
+#define WEATHER_HIDDEN_FRAME     (GRect(-70, 90, 65, 60))
 #define TEMPERATURE_FRAME (GRect(65, 95, 82, 25))
 #define WIND_FRAME        (GRect(65, 120, 82, 25))
 
@@ -94,6 +95,12 @@ static BitmapLayer *Batt_icon_layer; //Layer for the Battery status
 static GBitmap *weather_image;
 static BitmapLayer *weather_icon_layer; //Layer for the weather info
 
+//Define annimations
+static PropertyAnimation *weather_animation_in;
+static PropertyAnimation *weather_animation_out;
+static GRect weather_from_rect;
+static GRect weather_to_rect;
+
 
 //Define and initialize variables
 //FONTS
@@ -127,7 +134,44 @@ bool color_inverted;
 bool vibes;
 int ICON_CODE;
 bool batt_status = true; //If true, display the battery status all the time; if false, just when running low (<10%)
+bool use_animation = true;
 
+//**************************************************//
+// Helper function to distroy a property annimation //
+//**************************************************//
+
+void destroy_property_animation(PropertyAnimation **prop_animation) {
+    if (*prop_animation == NULL) {
+        return;
+    }
+    if (animation_is_scheduled((Animation*) *prop_animation)) {
+        animation_unschedule((Animation*) *prop_animation);
+    }
+    property_animation_destroy(*prop_animation);
+    *prop_animation = NULL;
+}
+
+void weather_animation_started(Animation *animation, void *data) {
+	(void)animation;
+	(void)data;
+}
+
+void weather_animation_stopped(Animation *animation, void *data) {
+	(void)animation;
+	(void)data;
+
+  if (weather_image) {gbitmap_destroy(weather_image);}
+  weather_image = gbitmap_create_with_resource(WEATHER_ICONS[ICON_CODE]);
+	bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
+
+	destroy_property_animation(&weather_animation_in);
+
+	weather_animation_in = property_animation_create_layer_frame(bitmap_layer_get_layer(weather_icon_layer), &weather_to_rect, &weather_from_rect);
+	animation_set_duration((Animation*)weather_animation_in, 500);
+
+	animation_set_curve((Animation*)weather_animation_in,AnimationCurveEaseOut);
+	animation_schedule((Animation*)weather_animation_in);
+}
 
 
 //**************************//
@@ -323,13 +367,29 @@ static void sync_tuple_changed_callback(const uint32_t key,
     // App Sync keeps new_tuple in sync_buffer, so we may use it directly
     switch (key) {
     case WEATHER_ICON_KEY:
-        if (weather_image) {gbitmap_destroy(weather_image);}
+        //if (weather_image) {gbitmap_destroy(weather_image);}
 
-        weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
-        bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
+        //weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
+        //bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
         //persist_write_int(WEATHER_ICON_KEY, new_tuple->value->uint8);
         ICON_CODE = new_tuple->value->uint8;
-        break;
+      if(use_animation){
+        destroy_property_animation(&weather_animation_out);
+        weather_animation_out = property_animation_create_layer_frame(bitmap_layer_get_layer(weather_icon_layer), &weather_from_rect, &weather_to_rect);
+        animation_set_duration((Animation*)weather_animation_out, 500);  
+        animation_set_curve((Animation*)weather_animation_out,AnimationCurveEaseOut);
+        animation_set_handlers((Animation*)weather_animation_out, (AnimationHandlers) {
+      		.started = (AnimationStartedHandler) weather_animation_started,
+      		.stopped = (AnimationStoppedHandler) weather_animation_stopped
+      	}, 0);
+      
+        animation_schedule((Animation*)weather_animation_out);
+      }else{
+        if (weather_image) {gbitmap_destroy(weather_image);}
+        weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
+        bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
+      }
+      break;
 
     case WEATHER_TEMPERATURE_KEY:
         //Update the temperature
@@ -502,6 +562,10 @@ void handle_init(void)
     window_stack_push(my_window, true /* Animated */);
     //Define the Black vs. White layout
     window_set_background_color(my_window, GColorBlack);
+  
+  //set the weather frame start and end animation positions
+   weather_from_rect = WEATHER_FRAME;
+   weather_to_rect = WEATHER_HIDDEN_FRAME;
 
 
 
