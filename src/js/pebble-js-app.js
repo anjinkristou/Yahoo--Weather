@@ -42,7 +42,7 @@ var imageId = {
   21 : FOG, //haze
   22 : FOG, //smoky
   23 : WINDY, //blustery
-  24 : WINDY, //windy
+  24 : WINDY, //windya
   25 : COLD, //cold
   26 : CLOUDY, //cloudy
   27 : CLOUDY, //mostly cloudy (night)
@@ -262,7 +262,7 @@ function locationError(err) {
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'http://anjinkristou.github.io/Yahoo--WeatherV2/YWsettings.html?' + //Here you need to enter your configuration webservice
+  var uri = 'https://raw.github.com/anjinkristou/Yahoo--WeatherV2/master/src/js/settings.html?' + //Here you need to enter your configuration webservice
     'language=' + encodeURIComponent(options.language) +
 	'&use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
