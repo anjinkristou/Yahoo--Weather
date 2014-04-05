@@ -118,6 +118,8 @@ if (options === null) options = {
                          "invert_color" : "false",
                          "vibes_bluetooth" : "false",
                          "vibes_hour" : "false",
+                         "vibes_hour_start" : "8",                         
+                         "vibes_hour_end" : "20",
                          "use_animation" : "false"
                       };
 
@@ -223,6 +225,8 @@ function getWeatherFromWoeid(woeid, city) {
             "language" : options.language,
             "vibes_bluetooth" : (options.vibes_bluetooth == "true" ? 1 : 0),
             "vibes_hour" : (options.vibes_hour == "true" ? 1 : 0),
+            "vibes_hour_start" : options.vibes_hour_start,
+            "vibes_hour_end" : options.vibes_hour_end,
             "use_animation" : (options.use_animation == "true" ? 1 : 0),
           });
         }
@@ -270,6 +274,8 @@ Pebble.addEventListener('showConfiguration', function(e) {
     '&invert_color=' + encodeURIComponent(options.invert_color) +
     '&vibes_bluetooth=' + encodeURIComponent(options.vibes_bluetooth) +
     '&vibes_hour=' + encodeURIComponent(options.vibes_hour) +
+    '&vibes_hour_start=' + encodeURIComponent(options.vibes_hour_start) +
+    '&vibes_hour_end=' + encodeURIComponent(options.vibes_hour_end) +
     '&use_animation=' + encodeURIComponent(options.use_animation);
 
 	//console.log('showing configuration at uri: ' + uri);

@@ -70,6 +70,8 @@ enum WeatherKey {
     VIBES_BLUETOOTH_KEY = 0x6, 		 // TUPLE_CSTRING
     USE_ANIMATION_KEY = 0x7, 			 // TUPLE_CSTRING
     VIBES_HOUR_KEY = 0x8, 			   // TUPLE_CSTRING
+    VIBES_HOUR_START_KEY = 0x9, 	 // TUPLE_CSTRING
+    VIBES_HOUR_END_KEY = 0xA, 		 // TUPLE_CSTRING
 };
 
 typedef struct setting_t {
@@ -79,6 +81,8 @@ typedef struct setting_t {
     bool batt_status; //If true, display the battery status all the time; if false, just when running low (<10%)
     bool use_animation;
     bool vibes_hour;
+    int vibes_hour_start;
+    int vibes_hour_end;
 } settings_t;
 
 settings_t settings = {
@@ -87,7 +91,9 @@ settings_t settings = {
     .vibes_bluetooth = true,
     .batt_status = true, //If true, display the battery status all the time; if false, just when running low (<10%)
     .use_animation = true,
-    .vibes_hour = false
+    .vibes_hour = false,
+    .vibes_hour_start = 8,
+    .vibes_hour_end = 20
 };
 
 //Declare initial window
@@ -443,6 +449,16 @@ static void sync_tuple_changed_callback(const uint32_t key,
         persist_write_bool(VIBES_HOUR_KEY, settings.vibes_hour);
         break;
       
+    case VIBES_HOUR_START_KEY:
+        settings.vibes_hour_start = new_tuple->value->uint8;
+        persist_write_bool(VIBES_HOUR_START_KEY, settings.vibes_hour_start);
+        break;
+      
+    case VIBES_HOUR_END_KEY:
+        settings.vibes_hour_end = new_tuple->value->uint8;
+        persist_write_bool(VIBES_HOUR_END_KEY, settings.vibes_hour_end);
+        break;
+      
     case USE_ANIMATION_KEY:
         settings.use_animation = new_tuple->value->uint8 != 0;
         persist_write_bool(USE_ANIMATION_KEY, settings.use_animation);
@@ -484,7 +500,10 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed)
         //Check BT Status
         handle_bluetooth(bluetooth_connection_service_peek());
       
-      if(settings.vibes_hour && tick_time->tm_min == 0){
+      if(settings.vibes_hour && 
+         tick_time->tm_hour >= settings.vibes_hour_start &&
+         tick_time->tm_hour <= settings.vibes_hour_end &&
+         tick_time->tm_min == 0){
           //Vibes to alert hour
             vibes_short_pulse();
       }
@@ -562,6 +581,8 @@ void handle_init(void)
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
         TupletInteger(VIBES_BLUETOOTH_KEY, persist_read_bool(VIBES_BLUETOOTH_KEY)),
         TupletInteger(VIBES_HOUR_KEY, persist_read_bool(VIBES_HOUR_KEY)),
+        TupletInteger(VIBES_HOUR_START_KEY, persist_read_bool(VIBES_HOUR_START_KEY)),
+        TupletInteger(VIBES_HOUR_END_KEY, persist_read_bool(VIBES_HOUR_END_KEY)),
         TupletInteger(USE_ANIMATION_KEY, persist_read_bool(USE_ANIMATION_KEY)),
         TupletCString(LANGUAGE_KEY, "0"),
         TupletCString(WEATHER_WIND_KEY, ""),
@@ -575,6 +596,8 @@ void handle_init(void)
     settings.color_inverted = persist_read_bool(INVERT_COLOR_KEY);
     settings.vibes_bluetooth = persist_read_bool(VIBES_BLUETOOTH_KEY);
     settings.vibes_hour = persist_read_bool(VIBES_HOUR_KEY);
+  settings.vibes_hour_start = persist_read_bool(VIBES_HOUR_START_KEY);
+  settings.vibes_hour_end = persist_read_bool(VIBES_HOUR_END_KEY);
     settings.use_animation = persist_read_bool(USE_ANIMATION_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
