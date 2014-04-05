@@ -202,6 +202,7 @@ function getWeatherFromWoeid(woeid, city) {
         response = JSON.parse(req.responseText);
         if (response) {
           var condition = response.query.results.channel.item.condition;
+          var forecast = response.query.results.channel.item.forecast;
           var wind_record = response.query.results.channel.wind;
           //temperature = condition.temp + (celsius ? "\u00B0C" : "\u00B0F"); //Use this format if you want to display the unit
 			var temperature = condition.temp + "\u00B0";

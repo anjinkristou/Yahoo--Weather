@@ -67,9 +67,9 @@ enum WeatherKey {
     INVERT_COLOR_KEY = 0x3,  		   // TUPLE_CSTRING
     LANGUAGE_KEY = 0x4, 			     // TUPLE_CSTRING
     WEATHER_WIND_KEY = 0x5, 			 // TUPLE_CSTRING
-    VIBES_BLUETOOTH_KEY = 0x6, 			 // TUPLE_CSTRING
+    VIBES_BLUETOOTH_KEY = 0x6, 		 // TUPLE_CSTRING
     USE_ANIMATION_KEY = 0x7, 			 // TUPLE_CSTRING
-    VIBES_HOUR_KEY = 0x8, 			 // TUPLE_CSTRING
+    VIBES_HOUR_KEY = 0x8, 			   // TUPLE_CSTRING
 };
 
 typedef struct setting_t {
