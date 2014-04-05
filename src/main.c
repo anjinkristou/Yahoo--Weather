@@ -343,7 +343,7 @@ static void handle_bluetooth(bool connected)
 //** Handle accel **//
 //**************************//
 
-void accel_int(AccelAxisType axis, int32_t direction){
+void accel_tap_handler(AccelAxisType axis, int32_t direction){
 	if (is_accel_stoped == false){
     //Refresh the weather
     send_cmd();
@@ -786,7 +786,7 @@ void handle_init(void)
     timer = app_timer_register(timeout_ms, timer_callback, NULL);
   
     //
-    accel_tap_service_subscribe(accel_int);
+    accel_tap_service_subscribe(accel_tap_handler);
 
 } //HANDLE_INIT
 
@@ -803,6 +803,7 @@ void handle_deinit(void)
     tick_timer_service_unsubscribe();
     battery_state_service_unsubscribe();
     bluetooth_connection_service_unsubscribe();
+    accel_tap_service_unsubscribe();
 
     //if (BT_image){gbitmap_destroy(BT_image);}
     //if (Batt_image){gbitmap_destroy(Batt_image);}
