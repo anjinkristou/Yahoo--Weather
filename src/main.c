@@ -112,6 +112,8 @@ TextLayer *Wind_Layer;        //Layer for the Temperature
 
 InverterLayer *inverter_layer;
 
+static bool is_accel_stoped = false;
+
 static GBitmap *BT_image;
 static BitmapLayer *BT_icon_layer; //Layer for the BT connection
 
@@ -141,6 +143,7 @@ bool BTConnected = true;
 
 //Time control for weather refresh
 static AppTimer *timer;
+static AppTimer *accel_start = NULL;
 const uint32_t timeout_ms = 1800000; //30min (1min = 60000)
 
 //Date & Time
@@ -157,6 +160,7 @@ static char language[] = "0"; 	//"0" = English //"E" = Spanish // "I" = Italian 
 // "C" = Czech // "F" = French // "P" = Portuguese // "X" = Finnish // "D" = Dutch
 //"1" = Polish // "S" = Swedish // "2" = Danish //"3" = Catalan
 
+static void send_cmd(void);
 
 //**************************************************//
 // Helper function to distroy a property annimation //
@@ -261,6 +265,12 @@ static void handle_battery(BatteryChargeState charge_state) {
     //text_layer_set_text(Batt_Layer, battery_text);
 }
 
+static void accel_starting(void *data) {
+	app_log(APP_LOG_LEVEL_DEBUG, __FILE__, __LINE__, "accel_starting");
+	is_accel_stoped = false;
+	accel_start = NULL;
+}
+
 static void vibes_bluetooth()
 {
     //************************//
@@ -268,6 +278,10 @@ static void vibes_bluetooth()
     //************************//
   
     if(!settings.vibes_bluetooth) return;
+  
+  is_accel_stoped = true;
+  accel_start = NULL;
+  accel_start = app_timer_register(2000, &accel_starting, NULL);
 
     //Vibes on connection
     if (BTConnected == false){
@@ -324,6 +338,19 @@ static void handle_bluetooth(bool connected)
 
 
 } //handle_bluetooth
+
+//**************************//
+//** Handle accel **//
+//**************************//
+
+void accel_int(AccelAxisType axis, int32_t direction){
+	if (is_accel_stoped == false){
+    //Refresh the weather
+    send_cmd();
+	} else {
+
+	}
+}
 
 //**************************//
 //** Get the current date **//
@@ -596,8 +623,8 @@ void handle_init(void)
     settings.color_inverted = persist_read_bool(INVERT_COLOR_KEY);
     settings.vibes_bluetooth = persist_read_bool(VIBES_BLUETOOTH_KEY);
     settings.vibes_hour = persist_read_bool(VIBES_HOUR_KEY);
-  settings.vibes_hour_start = persist_read_bool(VIBES_HOUR_START_KEY);
-  settings.vibes_hour_end = persist_read_bool(VIBES_HOUR_END_KEY);
+    settings.vibes_hour_start = persist_read_bool(VIBES_HOUR_START_KEY);
+    settings.vibes_hour_end = persist_read_bool(VIBES_HOUR_END_KEY);
     settings.use_animation = persist_read_bool(USE_ANIMATION_KEY);
     persist_read_string(LANGUAGE_KEY, language, sizeof(language));
 
@@ -757,6 +784,9 @@ void handle_init(void)
     //setup the timer to refresh the weather info every 30min
     //const uint32_t timeout_ms = 1800000;
     timer = app_timer_register(timeout_ms, timer_callback, NULL);
+  
+    //
+    accel_tap_service_subscribe(accel_int);
 
 } //HANDLE_INIT
 
