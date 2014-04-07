@@ -15,7 +15,7 @@
 #define BATT_FRAME       (GRect(103, 4, 40, 22)) //98,,
 #define BT_FRAME         (GRect(127, 4, 23, 22))
 #define TIME_FRAME       (GRect(0, 15, 144, 152))
-#define DATE_FRAME       (GRect(1, 69, 139, 106))
+#define DATE_FRAME       (GRect(1, 69, 143, 20))
 /*
 #define MAX_FRAME (GRect(65, 90, 40, 23))
 #define MIN_FRAME (GRect(105, 90, 40, 23))
@@ -23,9 +23,10 @@
 
 #define LAST_UPDATE_FRAME (GRect(110, 148, 34, 23))
 #define LOCATION_FRAME    (GRect(1, 148, 110, 23))
-#define WEATHER_FRAME     (GRect(5, 90, 65, 60))
-#define WEATHER_HIDDEN_FRAME     (GRect(-70, 90, 65, 60))
-#define TEMPERATURE_FRAME (GRect(65, 95, 82, 25))
+#define WEATHER_FRAME     (GRect(1, 90, 60, 60))
+#define WEATHER_HIDDEN_FRAME     (GRect(-70, 90, 60, 60))
+#define TEMPERATURE_FRAME (GRect(65, 95, 40, 25))
+#define TEMPERATURE_HL_FRAME (GRect(105, 98, 40, 25))
 #define WIND_FRAME        (GRect(65, 120, 82, 25))
 
 #define INVERTER_FRAME    (GRect(0,0,144,168))
@@ -72,6 +73,7 @@ enum WeatherKey {
     VIBES_HOUR_KEY = 0x8, 			   // TUPLE_CSTRING
     VIBES_HOUR_START_KEY = 0x9, 	 // TUPLE_CSTRING
     VIBES_HOUR_END_KEY = 0xA, 		 // TUPLE_CSTRING
+    WEATHER_TEMPERATURE_HL_KEY = 0xB, // TUPLE_CSTRING
 };
 
 typedef struct setting_t {
@@ -108,6 +110,7 @@ TextLayer *Location_Layer;                 // Layer for the last update
 TextLayer *Batt_Layer;                        //Layer for the BT connection
 TextLayer *BT_Layer;                        //Layer for the BT connection
 TextLayer *Temperature_Layer;        //Layer for the Temperature
+TextLayer *Temperature_hl_Layer;        //Layer for the Temperature
 TextLayer *Wind_Layer;        //Layer for the Temperature
 
 InverterLayer *inverter_layer;
@@ -405,8 +408,6 @@ void getDate()
 static AppSync sync;
 static uint8_t sync_buffer[256];
 
-
-
 static void sync_tuple_changed_callback(const uint32_t key,
                                         const Tuple* new_tuple,
                                         const Tuple* old_tuple,
@@ -415,7 +416,7 @@ static void sync_tuple_changed_callback(const uint32_t key,
 
     // App Sync keeps new_tuple in sync_buffer, so we may use it directly
     switch (key) {
-    case WEATHER_ICON_KEY:
+      case WEATHER_ICON_KEY:{
         //if (weather_image) {gbitmap_destroy(weather_image);}
 
         //weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
@@ -438,65 +439,69 @@ static void sync_tuple_changed_callback(const uint32_t key,
         weather_image = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
         bitmap_layer_set_bitmap(weather_icon_layer, weather_image);
       }
-      break;
+      }break;
 
-    case WEATHER_TEMPERATURE_KEY:
+      case WEATHER_TEMPERATURE_KEY:{
         //Update the temperature
-        //text_layer_set_text(Temperature_Layer, new_tuple->value->cstring);
         text_layer_set_text(Temperature_Layer, new_tuple->value->cstring);
         //Set the time on which weather was retrived
         memcpy(&last_update, time_text, strlen(time_text));
         text_layer_set_text(Last_Update, last_update);
-        break;
+      }break;
+      
+      case WEATHER_TEMPERATURE_HL_KEY:{
+        //Update the temperature
+        text_layer_set_text(Temperature_hl_Layer, new_tuple->value->cstring);
+      }break;
 
-    case WEATHER_WIND_KEY:
+      case WEATHER_WIND_KEY:{
         //Update the wind
         //text_layer_set_text(Wind_Layer, new_tuple->value->cstring);
         text_layer_set_text(Wind_Layer, new_tuple->value->cstring);
-        break;
+      }break;
 
-    case WEATHER_CITY_KEY:
+      case WEATHER_CITY_KEY:{
         text_layer_set_text(Location_Layer, new_tuple->value->cstring);
-        break;
+      }break;
 
-    case INVERT_COLOR_KEY:
+      case INVERT_COLOR_KEY:{
         settings.color_inverted = new_tuple->value->uint8 != 0;
         persist_write_bool(INVERT_COLOR_KEY, settings.color_inverted);
 
         layer_set_hidden((Layer*)inverter_layer, !settings.color_inverted);
 
-        break;
-    case VIBES_BLUETOOTH_KEY:
+      }break;
+      case VIBES_BLUETOOTH_KEY:{
         settings.vibes_bluetooth = new_tuple->value->uint8 != 0;
         persist_write_bool(VIBES_BLUETOOTH_KEY, settings.vibes_bluetooth);
-        break;
+      }break;
       
-    case VIBES_HOUR_KEY:
+      case VIBES_HOUR_KEY:{
         settings.vibes_hour = new_tuple->value->uint8 != 0;
         persist_write_bool(VIBES_HOUR_KEY, settings.vibes_hour);
-        break;
+      }break;
       
-    case VIBES_HOUR_START_KEY:
+      case VIBES_HOUR_START_KEY:{
         settings.vibes_hour_start = new_tuple->value->uint8;
         persist_write_bool(VIBES_HOUR_START_KEY, settings.vibes_hour_start);
-        break;
+      }break;
       
-    case VIBES_HOUR_END_KEY:
+      case VIBES_HOUR_END_KEY:{
         settings.vibes_hour_end = new_tuple->value->uint8;
         persist_write_bool(VIBES_HOUR_END_KEY, settings.vibes_hour_end);
-        break;
+      }break;
       
-    case USE_ANIMATION_KEY:
+      case USE_ANIMATION_KEY:{
         settings.use_animation = new_tuple->value->uint8 != 0;
         persist_write_bool(USE_ANIMATION_KEY, settings.use_animation);
-        break;
+      }break;
 
-    case LANGUAGE_KEY:
+      case LANGUAGE_KEY:{
         memcpy(&language, new_tuple->value->cstring, strlen(new_tuple->value->cstring));
         persist_write_bool(LANGUAGE_KEY, new_tuple->value->cstring);
         //Init the date
         getDate();
-        break;
+      }break;
     }
 }
 
@@ -549,7 +554,7 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed)
 //************************************************//
 static void send_cmd(void) {
     //Tuplet value = TupletInteger(1, 1);
-    Tuplet value = TupletCString(2,"loading...");
+    Tuplet value = TupletCString(WEATHER_CITY_KEY,"loading...");
 
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
@@ -604,6 +609,7 @@ void handle_init(void)
     Tuplet initial_values[] = {
         TupletInteger(WEATHER_ICON_KEY, (uint8_t) 16), //INITIALIZE TO "N/A"
         TupletCString(WEATHER_TEMPERATURE_KEY, ""),
+        TupletCString(WEATHER_TEMPERATURE_HL_KEY, ""),
         TupletCString(WEATHER_CITY_KEY, ""),
         TupletInteger(INVERT_COLOR_KEY, persist_read_bool(INVERT_COLOR_KEY)),
         TupletInteger(VIBES_BLUETOOTH_KEY, persist_read_bool(VIBES_BLUETOOTH_KEY)),
@@ -712,8 +718,18 @@ void handle_init(void)
 
     text_layer_set_background_color(Temperature_Layer, GColorClear);
     text_layer_set_font(Temperature_Layer, font_temperature);
-    text_layer_set_text_alignment(Temperature_Layer, GTextAlignmentCenter);
+    text_layer_set_text_alignment(Temperature_Layer, GTextAlignmentRight);
     layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(Temperature_Layer));
+  
+    //Display the Temperature layer
+    Temperature_hl_Layer = text_layer_create(TEMPERATURE_HL_FRAME);
+
+    text_layer_set_text_color(Temperature_hl_Layer, GColorWhite);
+
+    text_layer_set_background_color(Temperature_hl_Layer, GColorClear);
+    text_layer_set_font(Temperature_hl_Layer, font_update);
+    text_layer_set_text_alignment(Temperature_hl_Layer, GTextAlignmentLeft);
+    layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(Temperature_hl_Layer));
 
     //Display the Wind layer
     Wind_Layer = text_layer_create(WIND_FRAME);
@@ -814,6 +830,7 @@ void handle_deinit(void)
     text_layer_destroy(date_layer);
     text_layer_destroy(Weekday_Layer);
     text_layer_destroy(Temperature_Layer);
+    text_layer_destroy(Temperature_hl_Layer);
     text_layer_destroy(Wind_Layer);
     text_layer_destroy(Location_Layer);
     text_layer_destroy(Last_Update);

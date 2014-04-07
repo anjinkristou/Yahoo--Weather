@@ -208,16 +208,19 @@ function getWeatherFromWoeid(woeid, city) {
           var wind_record = response.query.results.channel.wind;
           //temperature = condition.temp + (celsius ? "\u00B0C" : "\u00B0F"); //Use this format if you want to display the unit
 			var temperature = condition.temp + "\u00B0";
+      var temperature_hl = "H: " + forecast.high + "\u00B0" + "\n" + 
+                           "L: " + forecast.low + "\u00B0";
       var icon = imageId[condition.code];
           var wind_speed = Math.round(celsius ? wind_record.speed *1000 /60 /60 : wind_record.speed);
       var wind_direction = windDirectionFromdegrees(wind_record.direction);
       var wind = wind_speed + " " + wind_direction;
 			//var inverted == 'B';
 			//if (options['color_inverted']=true) {inverted == 'W';}
-          console.log("icon: " + icon + " temp: " + temperature + " city: " + city + " wind: " + wind);
+          console.log("icon: " + icon + " temp: " + temperature + " city: " + city + " wind: " + wind + " thl: " + temperature_hl);
           Pebble.sendAppMessage({
             "icon":icon,
             "temperature":temperature,
+            "temperature_hl":temperature_hl,
              "wind": wind,
             //Put here the output parameters to "Main.C"
             "city":city,
@@ -260,13 +263,14 @@ function locationError(err) {
   Pebble.sendAppMessage({
     "icon":16,
     "temperature":"",
+    "temperature_hl":"",
     "wind":""
     //Put here the output parameters to "Main.C"
   });
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'https://raw.github.com/anjinkristou/Yahoo--WeatherV2/master/src/js/settings.html?' + //Here you need to enter your configuration webservice
+  var uri = 'http://anjinkristou.github.io/Yahoo--WeatherV2/YWsettings.html?' + //Here you need to enter your configuration webservice
     'language=' + encodeURIComponent(options.language) +
 	'&use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
